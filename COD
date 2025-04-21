@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetAssist AI - Assistente de Estudos Veterinários</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        'primary-dark': '#4a49b8',
+                        'bg-light': '#FFFFFF',
+                        'bg-dark': '#181818',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .markdown-content h1 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .markdown-content h2 {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-top: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        .markdown-content h3 {
+            font-size: 1.125rem;
+            font-weight: bold;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .markdown-content p {
+            margin-bottom: 0.75rem;
+        }
+        .markdown-content ul, .markdown-content ol {
+            padding-left: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .markdown-content ul {
+            list-style-type: disc;
+        }
+        .markdown-content ol {
+            list-style-type: decimal;
+        }
+        .markdown-content li {
+            margin-bottom: 0.25rem;
+        }
+        .markdown-content a {
+            color: #5D5CDE;
+            text-decoration: underline;
+        }
+        .markdown-content blockquote {
+            border-left: 4px solid #e5e7eb;
+            padding-left: 1rem;
+            color: #6b7280;
+            margin: 1rem 0;
+        }
+        .markdown-content pre {
+            background-color: #f3f4f6;
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        .dark .markdown-content pre {
+            background-color: #374151;
+        }
+        .markdown-content code {
+            font-family: monospace;
+            background-color: #f3f4f6;
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.25rem;
+        }
+        .dark .markdown-content code {
+            background-color: #374151;
+        }
+        .markdown-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        .markdown-content th, .markdown-content td {
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+        }
+        .dark .markdown-content th, .dark .markdown-content td {
+            border-color: #4b5563;
+        }
+        .markdown-content th {
+            background-color: #f9fafb;
+            font-weight: bold;
+        }
+        .dark .markdown-content th {
+            background-color: #1f2937;
+        }
+        
+        .saved-item:hover {
+            background-color: rgba(93, 92, 222, 0.1);
+        }
+        
+        .dark .saved-item:hover {
+            background-color: rgba(93, 92, 222, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-bg-light dark:bg-bg-dark text-gray-900 dark:text-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Cabeçalho -->
+        <header class="text-center mb-6">
+            <div class="flex justify-center items-center mb-3">
+                <svg class="w-16 h-16 mr-3" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="48" fill="#5D5CDE" fill-opacity="0.1" stroke="#5D5CDE" stroke-width="2" />
+                    
+                    <!-- Cavalo (esquerda) -->
+                    <path d="M30,60 C25,55 20,55 18,60 C16,65 16,70 20,75 C22,78 25,80 27,80 C30,80 35,78 32,70 C30,65 30,62 30,60 Z" fill="#5D5CDE" />
+                    <path d="M20,60 C20,55 25,40 28,35 C31,30 35,28 35,28 C35,28 33,25 30,25 C27,25 20,28 15,35 C10,42 12,55 15,60 C18,65 20,65 20,60 Z" fill="#5D5CDE" />
+                    <circle cx="32" cy="32" r="1.5" fill="black" />
+                    
+                    <!-- Cachorro (direita) -->
+                    <path d="M70,60 C75,55 80,55 82,60 C84,65 84,70 80,75 C78,78 75,80 73,80 C70,80 65,78 68,70 C70,65 70,62 70,60 Z" fill="#5D5CDE" />
+                    <path d="M80,60 C80,55 75,40 72,35 C69,30 65,28 65,28 C65,28 67,25 70,25 C73,25 80,28 85,35 C90,42 88,55 85,60 C82,65 80,65 80,60 Z" fill="#5D5CDE" />
+                    <path d="M75,36 L85,30 L83,38 Z" fill="#5D5CDE" /> <!-- Orelha -->
+                    <circle cx="68" cy="32" r="1.5" fill="black" />
+                    <path d="M68,40 C67,40 64,40 65,42 C66,44 70,44 71,42 C72,40 69,40 68,40 Z" fill="red" /> <!-- Boca/Raiva -->
+                    
+                    <!-- Símbolo veterinário no centro -->
+                    <path d="M47,35 L53,35 L53,47 L65,47 L65,53 L53,53 L53,65 L47,65 L47,53 L35,53 L35,47 L47,47 Z" fill="#5D5CDE" />
+                </svg>
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold text-primary dark:text-primary mb-0">VetAssist AI</h1>
+                    <p class="text-lg text-gray-600 dark:text-gray-400">Assistente de Estudos Veterinários</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Seletor de Categorias -->
+        <div class="mb-6">
+            <label for="category" class="block text-sm font-medium mb-2">Área Veterinária:</label>
+            <select id="category" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-base focus:ring-2 focus:ring-primary focus:border-primary">
+                <option value="geral">Medicina Veterinária Geral</option>
+                <optgroup label="Clínica e Cirurgia">
+                    <option value="clinica_pequenos">Clínica de Pequenos Animais</option>
+                    <option value="clinica_grandes">Clínica de Grandes Animais</option>
+                    <option value="cirurgia">Cirurgia Veterinária</option>
+                    <option value="anestesiologia">Anestesiologia</option>
+                    <option value="odontologia">Odontologia Veterinária</option>
+                </optgroup>
+                <optgroup label="Especialidades">
+                    <option value="dermatologia">Dermatologia</option>
+                    <option value="cardiologia">Cardiologia</option>
+                    <option value="neurologia">Neurologia</option>
+                    <option value="oftalmologia">Oftalmologia</option>
+                    <option value="reprodução">Reprodução e Obstetrícia</option>
+                </optgroup>
+                <optgroup label="Diagnóstico">
+                    <option value="diagnostico_imagem">Diagnóstico por Imagem</option>
+                    <option value="patologia_clinica">Patologia Clínica</option>
+                    <option value="parasitologia">Parasitologia</option>
+                </optgroup>
+                <optgroup label="Outros">
+                    <option value="nutricao">Nutrição Animal</option>
+                    <option value="selvagens">Medicina de Animais Selvagens</option>
+                    <option value="bem_estar">Bem-estar Animal</option>
+                    <option value="saude_publica">Saúde Pública Veterinária</option>
+                </optgroup>
+            </select>
+        </div>
+
+        <!-- Área de Perguntas -->
+        <div class="mb-6">
+            <label for="question" class="block text-sm font-medium mb-2">Sua Pergunta:</label>
+            <div class="flex items-center">
+                <textarea id="question" rows="3" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-base focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Digite sua pergunta sobre medicina veterinária..."></textarea>
+            </div>
+            <div class="mt-2 flex justify-end">
+                <button id="send-button" class="px-6 py-2 bg-primary hover:bg-primary-dark text-white font-medium rounded-lg transition-colors">
+                    Perguntar
+                </button>
+            </div>
+        </div>
+
+        <!-- Área de Resposta -->
+        <div class="mb-6">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-semibold">Resposta:</h2>
+                <div class="flex space-x-2">
+                    <button id="save-button" class="px-3 py-1 bg-primary hover:bg-primary-dark text-white text-sm font-medium rounded-lg transition-colors flex items-center" disabled>
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                        </svg>
+                        Salvar
+                    </button>
+                    <button id="download-button" class="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center" disabled>
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Baixar
+                    </button>
+                </div>
+            </div>
+            <div id="loading" class="hidden flex items-center justify-center p-4">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <span class="ml-2">Gerando resposta...</span>
+            </div>
+            <div id="response-container" class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 min-h-[200px] border border-gray-200 dark:border-gray-700 markdown-content">
+                <p class="text-gray-500 dark:text-gray-400 italic">
+                    Faça uma pergunta relacionada à medicina veterinária para obter informações detalhadas.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Área de Consultas Salvas -->
+        <div class="mb-6">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-semibold">Consultas Salvas:</h2>
+                <button id="clear-saved" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors hidden">
+                    Limpar Tudo
+                </button>
+            </div>
+            <div id="saved-container" class="bg-gray-50 dark:bg-gray-900 rounded-lg p-2 border border-gray-200 dark:border-gray-700 min-h-[100px] max-h-[300px] overflow-y-auto">
+                <p id="no-saved" class="text-gray-500 dark:text-gray-400 italic p-2">
+                    Nenhuma consulta salva. Use o botão "Salvar" para armazenar respostas.
+                </p>
+                <div id="saved-items" class="hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Verificar preferência de tema
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Banco de dados local
+        class VetAssistDB {
+            constructor() {
+                this.dbKey = 'vetassist_data';
+                this.cacheKey = 'vetassist_cache';
+                this.savedData = this.loadSavedData();
+                this.cache = this.loadCache();
+            }
+
+            loadSavedData() {
+                try {
+                    const data = localStorage.getItem(this.dbKey);
+                    return data ? JSON.parse(data) : [];
+                } catch (e) {
+                    console.error('Erro ao carregar dados salvos:', e);
+                    return [];
+                }
+            }
+
+            loadCache() {
+                try {
+                    const data = localStorage.getItem(this.cacheKey);
+                    return data ? JSON.parse(data) : {};
+                } catch (e) {
+                    console.error('Erro ao carregar cache:', e);
+                    return {};
+                }
+            }
+
+            saveItem(question, answer, category) {
+                const id = Date.now().toString();
+                const item = {
+                    id,
+                    question,
+                    answer,
+                    category,
+                    date: new Date().toISOString()
+                };
+                this.savedData.unshift(item);
+                this.persistData();
+                return id;
+            }
+
+            deleteItem(id) {
+                this.savedData = this.savedData.filter(item => item.id !== id);
+                this.persistData();
+            }
+
+            clearAll() {
+                this.savedData = [];
+                this.persistData();
+            }
+
+            persistData() {
+                try {
+                    localStorage.setItem(this.dbKey, JSON.stringify(this.savedData));
+                } catch (e) {
+                    console.error('Erro ao salvar dados:', e);
+                }
+            }
+
+            cacheResponse(question, category, response) {
+                const cacheKey = `${category}:${question.toLowerCase().trim()}`;
+                this.cache[cacheKey] = {
+                    response,
+                    timestamp: Date.now()
+                };
+                try {
+                    localStorage.setItem(this.cacheKey, JSON.stringify(this.cache));
+                } catch (e) {
+                    // Se cache estiver muito grande, limpe os itens mais antigos
+                    if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+                        this.pruneCache();
+                        this.cacheResponse(question, category, response);
+                    } else {
+                        console.error('Erro ao salvar cache:', e);
+                    }
+                }
+            }
+
+            getCachedResponse(question, category) {
+                const cacheKey = `${category}:${question.toLowerCase().trim()}`;
+                const cached = this.cache[cacheKey];
+                
+                // Verifica se o cache existe e não está expirado (7 dias)
+                if (cached && (Date.now() - cached.timestamp < 7 * 24 * 60 * 60 * 1000)) {
+                    return cached.response;
+                }
+                return null;
+            }
+            
+            pruneCache() {
+                // Ordena por timestamp e mantém apenas os 50 mais recentes
+                const entries = Object.entries(this.cache)
+                    .sort((a, b) => b[1].timestamp - a[1].timestamp)
+                    .slice(0, 50);
+                
+                this.cache = Object.fromEntries(entries);
+                localStorage.setItem(this.cacheKey, JSON.stringify(this.cache));
+            }
+        }
+
+        // Elementos DOM
+        const questionInput = document.getElementById('question');
+        const categorySelect = document.getElementById('category');
+        const sendButton = document.getElementById('send-button');
+        const responseContainer = document.getElementById('response-container');
+        const loadingIndicator = document.getElementById('loading');
+        const saveButton = document.getElementById('save-button');
+        const downloadButton = document.getElementById('download-button');
+        const savedItemsContainer = document.getElementById('saved-items');
+        const noSavedMessage = document.getElementById('no-saved');
+        const clearSavedButton = document.getElementById('clear-saved');
+
+        // Inicializar banco de dados
+        const db = new VetAssistDB();
+        let currentQuestion = '';
+        let currentAnswer = '';
+        let currentCategory = '';
+
+        // Carregar itens salvos
+        function loadSavedItems() {
+            const items = db.savedData;
+            
+            if (items.length === 0) {
+                savedItemsContainer.classList.add('hidden');
+                noSavedMessage.classList.remove('hidden');
+                clearSavedButton.classList.add('hidden');
+                return;
+            }
+            
+            savedItemsContainer.innerHTML = '';
+            items.forEach(item => {
+                const date = new Date(item.date).toLocaleDateString('pt-BR');
+                const categoryName = getCategoryName(item.category);
+                
+                const itemElement = document.createElement('div');
+                itemElement.className = 'saved-item p-3 border-b last:border-b-0 dark:border-gray-700 cursor-pointer';
+                itemElement.dataset.id = item.id;
+                
+                itemElement.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-medium text-primary dark:text-primary-300">${item.question}</h3>
+                        <div class="flex space-x-1">
+                            <button class="load-saved px-2 py-1 text-xs bg-primary hover:bg-primary-dark text-white rounded">
+                                Ver
+                            </button>
+                            <button class="delete-saved px-2 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        <span>${categoryName}</span> • <span>${date}</span>
+                    </div>
+                `;
+                
+                savedItemsContainer.appendChild(itemElement);
+            });
+            
+            savedItemsContainer.classList.remove('hidden');
+            noSavedMessage.classList.add('hidden');
+            clearSavedButton.classList.remove('hidden');
+            
+            // Adicionar event listeners
+            document.querySelectorAll('.load-saved').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.target.closest('.saved-item').dataset.id;
+                    const item = db.savedData.find(i => i.id === id);
+                    if (item) {
+                        responseContainer.innerHTML = marked.parse(item.answer);
+                        questionInput.value = item.question;
+                        categorySelect.value = item.category;
+                        currentQuestion = item.question;
+                        currentAnswer = item.answer;
+                        currentCategory = item.category;
+                        saveButton.disabled = true;
+                        downloadButton.disabled = false;
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.delete-saved').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = e.target.closest('.saved-item').dataset.id;
+                    if (confirm('Tem certeza que deseja excluir este item?')) {
+                        db.deleteItem(id);
+                        loadSavedItems();
+                    }
+                });
+            });
+        }
+
+        // Função para obter nome da categoria a partir do valor
+        function getCategoryName(value) {
+            for (const optgroup of categorySelect.querySelectorAll('optgroup')) {
+                for (const option of optgroup.querySelectorAll('option')) {
+                    if (option.value === value) {
+                        return option.textContent;
+                    }
+                }
+            }
+            return categorySelect.querySelector('option[value="geral"]').textContent;
+        }
+
+        // Função para enviar pergunta
+        async function sendQuestion() {
+            const question = questionInput.value.trim();
+            const category = categorySelect.value;
+            
+            if (!question) {
+                return;
+            }
+
+            currentQuestion = question;
+            currentCategory = category;
+            saveButton.disabled = true;
+            downloadButton.disabled = true;
+
+            // Verificar cache primeiro
+            const cachedResponse = db.getCachedResponse(question, category);
+            if (cachedResponse) {
+                responseContainer.innerHTML = marked.parse(cachedResponse);
+                currentAnswer = cachedResponse;
+                saveButton.disabled = false;
+                downloadButton.disabled = false;
+                return;
+            }
+
+            // Desabilitar botão e mostrar carregamento
+            sendButton.disabled = true;
+            responseContainer.innerHTML = '';
+            loadingIndicator.classList.remove('hidden');
+
+            // Registrar handler para resposta
+            window.Poe.registerHandler("vet-response-handler", (result) => {
+                const message = result.responses[0];
+                
+                // Esconder loading quando começar a receber conteúdo
+                loadingIndicator.classList.add('hidden');
+                
+                if (message.status === "error") {
+                    responseContainer.innerHTML = `<p class="text-red-500">Erro: ${message.statusText || 'Ocorreu um erro ao gerar a resposta.'}</p>`;
+                    saveButton.disabled = true;
+                    downloadButton.disabled = true;
+                } else {
+                    // Converter markdown para HTML
+                    responseContainer.innerHTML = marked.parse(message.content);
+                    currentAnswer = message.content;
+                    
+                    if (message.status === "complete") {
+                        // Salvar no cache
+                        db.cacheResponse(question, category, message.content);
+                        
+                        // Habilitar botões de salvar e baixar
+                        saveButton.disabled = false;
+                        downloadButton.disabled = false;
+                        
+                        // Focar no campo de pergunta para nova consulta
+                        questionInput.value = '';
+                        questionInput.focus();
+                    }
+                }
+                
+                // Re-habilitar botão quando completo
+                if (message.status === "complete" || message.status === "error") {
+                    sendButton.disabled = false;
+                }
+            });
+
+            try {
+                // Construir prompt com contexto da categoria
+                let contextPrompt = '';
+                if (category !== 'geral') {
+                    const categoryName = categorySelect.options[categorySelect.selectedIndex].text;
+                    contextPrompt = `Responda como especialista em ${categoryName}. `;
+                }
+                
+                // Usar GPT-4o-mini para economizar créditos
+                const fullPrompt = `@GPT-4o-mini ${contextPrompt}${question}`;
+                
+                await window.Poe.sendUserMessage(fullPrompt, {
+                    handler: "vet-response-handler",
+                    stream: true,
+                    openChat: false
+                });
+            } catch (err) {
+                loadingIndicator.classList.add('hidden');
+                responseContainer.innerHTML = `<p class="text-red-500">Erro: ${err.message || 'Ocorreu um erro ao enviar sua pergunta.'}</p>`;
+                sendButton.disabled = false;
+                saveButton.disabled = true;
+                downloadButton.disabled = true;
+            }
+        }
+
+        // Função para salvar resposta
+        function saveResponse() {
+            if (!currentQuestion || !currentAnswer) return;
+            
+            const id = db.saveItem(currentQuestion, currentAnswer, currentCategory);
+            saveButton.disabled = true;
+            loadSavedItems();
+            
+            // Feedback para o usuário
+            const savedFeedback = document.createElement('div');
+            savedFeedback.className = 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 p-2 rounded mt-2 flex items-center justify-center';
+            savedFeedback.innerHTML = `
+                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Resposta salva com sucesso!
+            `;
+            responseContainer.parentNode.insertBefore(savedFeedback, responseContainer.nextSibling);
+            
+            setTimeout(() => {
+                savedFeedback.remove();
+            }, 3000);
+        }
+
+        // Função para baixar resposta
+        function downloadResponse() {
+            if (!currentQuestion || !currentAnswer) return;
+            
+            const categoryName = getCategoryName(currentCategory);
+            const filename = `VetAssist_${categoryName.replace(/\s+/g, '_')}_${Date.now()}.md`;
+            
+            const content = `# ${currentQuestion}\n\n${currentAnswer}`;
+            
+            // Criar elemento de texto temporário
+            const textArea = document.createElement('textarea');
+            textArea.value = content;
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            // Copiar para a área de transferência
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            alert('O conteúdo foi copiado para a área de transferência.\n\nPara salvar, cole em um editor de texto e salve como arquivo .md ou .txt');
+        }
+
+        // Inicializar
+        function init() {
+            // Carregar itens salvos
+            loadSavedItems();
+            
+            // Event listeners
+            sendButton.addEventListener('click', sendQuestion);
+            
+            questionInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendQuestion();
+                }
+            });
+            
+            saveButton.addEventListener('click', saveResponse);
+            downloadButton.addEventListener('click', downloadResponse);
+            clearSavedButton.addEventListener('click', () => {
+                if (confirm('Tem certeza que deseja excluir todas as consultas salvas?')) {
+                    db.clearAll();
+                    loadSavedItems();
+                }
+            });
+        }
+        
+        // Iniciar app
+        init();
+    </script>
+</body>
+</html>
